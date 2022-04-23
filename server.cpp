@@ -45,10 +45,8 @@ DWORD WINAPI handleClient(void* args) {
                 sprintf(name, "%d", ClientSocket);
                 iSendResult = send(sName, name, (int) strlen(name), 0);
                 if (iSendResult == SOCKET_ERROR) {
-                    printf("send failed with error: %d\n", WSAGetLastError());
-                    const char* mess = "Such user is not available.\n";
-                    send(ClientSocket, name, (int) strlen(name), 0);
-                    send(ClientSocket, mess, (int) strlen(mess), 0);
+                    send(ClientSocket, "e01", 4, 0); // error for no user available
+                    send(ClientSocket, "", 1, 0);
                 }
                 else {
                     send(sName, recvbuf, iResult, 0);

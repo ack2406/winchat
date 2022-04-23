@@ -31,14 +31,14 @@ DWORD WINAPI receiver(void* args) {
         else if (recvbuf[0] == '/') {
             continue;
         }
+        else if (strcmp(name, "e01") == 0) {
+            printf("No such user is available.\n");
+        }
         else {
             if (iResult > 0)
                 printf("%s: %s\n", name, recvbuf);
             else if (iResult == 0)
                 printf("Connection closed\n");
-            else
-                continue;
-            //printf("recv failed with error: %d\n", WSAGetLastError());
         }
 
 
