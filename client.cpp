@@ -1,9 +1,49 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <windows.h>
 #include <cstdio>
+#include <string>
 
 #define DEFAULT_PORT "27015"
 #define DEFAULT_BUFLEN 512
+
+DWORD WINAPI receiver(void* args) {
+    auto ConnectSocket = (SOCKET) args;
+    char recvbuf[DEFAULT_BUFLEN];
+    char name[DEFAULT_BUFLEN];
+    int buflen = DEFAULT_BUFLEN;
+    int iResult;
+    // Receive until the peer closes the connection
+    do {
+        recv(ConnectSocket, name, 4, 0);
+
+        iResult = recv(ConnectSocket, recvbuf, buflen, 0);
+
+        if (strcmp(recvbuf, "/exit") == 0) {
+            printf("%s left the chat.\n", name);
+        }
+        else if (strcmp(recvbuf, "/join") == 0) {
+            printf("%s joined the chat.\n", name);
+        }
+        else if (recvbuf[0] == '/') {
+            continue;
+        }
+        else {
+            if (iResult > 0)
+                printf("%s: %s\n", name, recvbuf);
+            else if (iResult == 0)
+                printf("Connection closed\n");
+            else
+                continue;
+            //printf("recv failed with error: %d\n", WSAGetLastError());
+        }
+
+
+    } while (iResult > 0);
+
+    return 0;
+}
+
 
 int main(int argc, char **argv) {
     WSADATA wsaData;
@@ -11,10 +51,8 @@ int main(int argc, char **argv) {
     struct addrinfo *result = nullptr,
             *ptr = nullptr,
             hints{};
-    const char *sendbuf = "this is a test";
-    char recvbuf[DEFAULT_BUFLEN];
     int iResult;
-    int recvbuflen = DEFAULT_BUFLEN;
+
 
     // Validate the parameters
     if (argc != 2) {
@@ -73,7 +111,14 @@ int main(int argc, char **argv) {
     }
 
     // Send an initial buffer
-    iResult = send(ConnectSocket, sendbuf, (int) strlen(sendbuf), 0);
+    char sendbuf[DEFAULT_BUFLEN];
+    char recvbuf[DEFAULT_BUFLEN];
+    int buflen = DEFAULT_BUFLEN;
+
+    DWORD id;
+    CreateThread(nullptr, 0, receiver, (void *) ConnectSocket, 0, &id);
+
+    iResult = send(ConnectSocket, "/join", buflen, 0);
     if (iResult == SOCKET_ERROR) {
         printf("send failed with error: %d\n", WSAGetLastError());
         closesocket(ConnectSocket);
@@ -81,7 +126,24 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("Bytes Sent: %ld\n", iResult);
+    do {
+        strcpy(sendbuf,"");
+        fgets(sendbuf,sizeof(sendbuf),stdin);
+        sendbuf[strcspn(sendbuf, "\n")] = 0;
+
+        //printf("sent: %s\n", sendbuf);
+        iResult = send(ConnectSocket, sendbuf, buflen, 0);
+        if (iResult == SOCKET_ERROR) {
+            printf("send failed with error: %d\n", WSAGetLastError());
+            closesocket(ConnectSocket);
+            WSACleanup();
+            return 1;
+        }
+
+        //printf("Bytes Sent: %ld\n", iResult);
+
+    } while (strcmp(sendbuf, "/exit") != 0);
+
 
     // shutdown the connection since no more data will be sent
     iResult = shutdown(ConnectSocket, SD_SEND);
@@ -92,18 +154,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Receive until the peer closes the connection
-    do {
 
-        iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-        if (iResult > 0)
-            printf("Bytes received: %d\n", iResult);
-        else if (iResult == 0)
-            printf("Connection closed\n");
-        else
-            printf("recv failed with error: %d\n", WSAGetLastError());
 
-    } while (iResult > 0);
+
+
 
     // cleanup
     closesocket(ConnectSocket);
