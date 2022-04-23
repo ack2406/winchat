@@ -60,8 +60,6 @@ DWORD WINAPI handleClient(void* args) {
                     if (s != ClientSocket && s != 0) {
                         // Echo the buffer back to the sender
                         sprintf(name, "%d", ClientSocket);
-                        //printf("co wysylam: %s, %d\n",name, (int) strlen(name));
-
                         send(s, name, (int) strlen(name), 0);
                         iSendResult = send(s, recvbuf, iResult, 0);
 
@@ -78,12 +76,6 @@ DWORD WINAPI handleClient(void* args) {
 
         } else if (iResult == 0) {
             printf("%d left the chat.\n", ClientSocket);
-        }
-        else {
-            printf("recv failed with error: %d\n", WSAGetLastError());
-            closesocket(ClientSocket);
-            WSACleanup();
-            return 1;
         }
 
     } while (iResult > 0);
@@ -178,10 +170,7 @@ int main() {
         // Accept a client socket
         ClientSocket = accept(ListenSocket, nullptr, nullptr);
         if (ClientSocket == INVALID_SOCKET) {
-            printf("accept failed with error: %d\n", WSAGetLastError());
-            closesocket(ListenSocket);
-            WSACleanup();
-            return 1;
+            continue;
         }
         clients.emplace_back(ClientSocket);
 
