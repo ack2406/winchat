@@ -9,20 +9,20 @@
 #define DEFAULT_BUFLEN 512
 
 struct Data {
-    std::vector<SOCKET>* clients;
+    std::vector<SOCKET> *clients;
     SOCKET ClientSocket;
 };
 
 
-DWORD WINAPI handleClient(void* args) {
-    Data* pData = (Data *) args;
+DWORD WINAPI handleClient(void *args) {
+    Data *pData = (Data *) args;
     SOCKET ClientSocket = pData->ClientSocket;
-    int iResult;
 
+    int iResult;
     int iSendResult;
+
     char recvbuf[DEFAULT_BUFLEN];
     char name[DEFAULT_BUFLEN];
-    char othername[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
 
     printf("%d joined the chat.\n", ClientSocket);
@@ -47,15 +47,11 @@ DWORD WINAPI handleClient(void* args) {
                 if (iSendResult == SOCKET_ERROR) {
                     send(ClientSocket, "e01", 4, 0); // error for no user available
                     send(ClientSocket, "", 1, 0);
-                }
-                else {
+                } else {
                     send(sName, recvbuf, iResult, 0);
                 }
-
-
-            }
-            else {
-                for (unsigned long long s : *pData->clients) {
+            } else {
+                for (unsigned long long s: *pData->clients) {
                     strcpy(name, "");
                     if (s != ClientSocket && s != 0) {
                         // Echo the buffer back to the sender
@@ -72,15 +68,13 @@ DWORD WINAPI handleClient(void* args) {
                     }
                 }
             }
-
-
         } else if (iResult == 0) {
             printf("%d left the chat.\n", ClientSocket);
         }
 
     } while (iResult > 0);
 
-    for (unsigned long long & client : *pData->clients) {
+    for (unsigned long long &client: *pData->clients) {
         if (client == ClientSocket) {
             client = 0;
         }
@@ -93,10 +87,12 @@ DWORD WINAPI handleClient(void* args) {
         closesocket(ClientSocket);
         WSACleanup();
         return 1;
+
     }
 
     return 0;
 }
+
 
 int main() {
     WSADATA wsaData;
@@ -104,11 +100,8 @@ int main() {
 
     auto ListenSocket = INVALID_SOCKET;
 
-
     struct addrinfo *result = nullptr;
     struct addrinfo hints{};
-
-
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -164,7 +157,7 @@ int main() {
 
     std::vector<SOCKET> clients;
 
-    while (true) {
+    for (int i = 0; i < 10000; i++) {
         auto ClientSocket = INVALID_SOCKET;
 
         // Accept a client socket
@@ -174,21 +167,11 @@ int main() {
         }
         clients.emplace_back(ClientSocket);
 
-
-        Data* data = new Data;
+        Data *data = new Data;
         data->clients = &clients;
         data->ClientSocket = ClientSocket;
         CreateThread(nullptr, 0, handleClient, (void *) data, 0, &id);
-
-
     }
-
-
-
-    // No longer need server socket
-    closesocket(ListenSocket);
-
-    WSACleanup();
 
     return 0;
 }

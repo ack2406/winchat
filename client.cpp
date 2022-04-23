@@ -7,7 +7,7 @@
 #define DEFAULT_PORT "27015"
 #define DEFAULT_BUFLEN 512
 
-DWORD WINAPI receiver(void* args) {
+DWORD WINAPI receiver(void *args) {
     auto ConnectSocket = (SOCKET) args;
     char recvbuf[DEFAULT_BUFLEN];
     char name[DEFAULT_BUFLEN];
@@ -21,27 +21,20 @@ DWORD WINAPI receiver(void* args) {
 
         if (strcmp(recvbuf, "/exit") == 0) {
             printf("%s left the chat.\n", name);
-        }
-        else if (strcmp(recvbuf, "/join") == 0) {
+        } else if (strcmp(recvbuf, "/join") == 0) {
             printf("%s joined the chat.\n", name);
-        }
-        else if (strncmp(recvbuf, "/tell", 5) == 0) {
+        } else if (strncmp(recvbuf, "/tell", 5) == 0) {
             printf("%s tells you: %s\n", name, recvbuf + 10);
-        }
-        else if (recvbuf[0] == '/') {
+        } else if (recvbuf[0] == '/') {
             continue;
-        }
-        else if (strcmp(name, "e01") == 0) {
+        } else if (strcmp(name, "e01") == 0) {
             printf("No such user is available.\n");
-        }
-        else {
+        } else {
             if (iResult > 0)
                 printf("%s: %s\n", name, recvbuf);
             else if (iResult == 0)
                 printf("Connection closed\n");
         }
-
-
     } while (iResult > 0);
 
     return 0;
@@ -55,7 +48,6 @@ int main(int argc, char **argv) {
             *ptr = nullptr,
             hints{};
     int iResult;
-
 
     // Validate the parameters
     if (argc != 2) {
@@ -115,7 +107,6 @@ int main(int argc, char **argv) {
 
     // Send an initial buffer
     char sendbuf[DEFAULT_BUFLEN];
-    char recvbuf[DEFAULT_BUFLEN];
     int buflen = DEFAULT_BUFLEN;
 
     DWORD id;
@@ -130,11 +121,10 @@ int main(int argc, char **argv) {
     }
 
     do {
-        strcpy(sendbuf,"");
-        fgets(sendbuf,sizeof(sendbuf),stdin);
+        strcpy(sendbuf, "");
+        fgets(sendbuf, sizeof(sendbuf), stdin);
         sendbuf[strcspn(sendbuf, "\n")] = 0;
 
-        //printf("sent: %s\n", sendbuf);
         iResult = send(ConnectSocket, sendbuf, buflen, 0);
         if (iResult == SOCKET_ERROR) {
             printf("send failed with error: %d\n", WSAGetLastError());
@@ -142,9 +132,6 @@ int main(int argc, char **argv) {
             WSACleanup();
             return 1;
         }
-
-        //printf("Bytes Sent: %ld\n", iResult);
-
     } while (strcmp(sendbuf, "/exit") != 0);
 
 
