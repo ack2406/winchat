@@ -25,6 +25,9 @@ DWORD WINAPI receiver(void* args) {
         else if (strcmp(recvbuf, "/join") == 0) {
             printf("%s joined the chat.\n", name);
         }
+        else if (strncmp(recvbuf, "/tell", 5) == 0) {
+            printf("%s tells you: %s\n", name, recvbuf + 10);
+        }
         else if (recvbuf[0] == '/') {
             continue;
         }

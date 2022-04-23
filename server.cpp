@@ -22,6 +22,7 @@ DWORD WINAPI handleClient(void* args) {
     int iSendResult;
     char recvbuf[DEFAULT_BUFLEN];
     char name[DEFAULT_BUFLEN];
+    char othername[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
 
     printf("%d joined the chat.\n", ClientSocket);
@@ -35,24 +36,47 @@ DWORD WINAPI handleClient(void* args) {
                 printf("%d: %s\n", ClientSocket, recvbuf);
 
             }
-            for (unsigned long long s : *pData->clients) {
-                strcpy(name, "");
-                if (s != ClientSocket && s != 0) {
-                    // Echo the buffer back to the sender
-                    sprintf(name, "%d", ClientSocket);
-                    //printf("co wysylam: %s, %d\n",name, (int) strlen(name));
 
-                    send(s, name, (int) strlen(name), 0);
-                    iSendResult = send(s, recvbuf, iResult, 0);
+            if (strncmp(recvbuf, "/tell", 5) == 0) {
+                strncpy(name, recvbuf + 6, 4);
+                name[3] = '\0';
+                SOCKET sName = atoi(name);
 
-                    if (iSendResult == SOCKET_ERROR) {
-                        printf("send failed with error: %d\n", WSAGetLastError());
-                        closesocket(ClientSocket);
-                        WSACleanup();
-                        return 1;
+                sprintf(name, "%d", ClientSocket);
+                iSendResult = send(sName, name, (int) strlen(name), 0);
+                if (iSendResult == SOCKET_ERROR) {
+                    printf("send failed with error: %d\n", WSAGetLastError());
+                    const char* mess = "Such user is not available.\n";
+                    send(ClientSocket, name, (int) strlen(name), 0);
+                    send(ClientSocket, mess, (int) strlen(mess), 0);
+                }
+                else {
+                    send(sName, recvbuf, iResult, 0);
+                }
+
+
+            }
+            else {
+                for (unsigned long long s : *pData->clients) {
+                    strcpy(name, "");
+                    if (s != ClientSocket && s != 0) {
+                        // Echo the buffer back to the sender
+                        sprintf(name, "%d", ClientSocket);
+                        //printf("co wysylam: %s, %d\n",name, (int) strlen(name));
+
+                        send(s, name, (int) strlen(name), 0);
+                        iSendResult = send(s, recvbuf, iResult, 0);
+
+                        if (iSendResult == SOCKET_ERROR) {
+                            printf("send failed with error: %d\n", WSAGetLastError());
+                            closesocket(ClientSocket);
+                            WSACleanup();
+                            return 1;
+                        }
                     }
                 }
             }
+
 
         } else if (iResult == 0) {
             printf("%d left the chat.\n", ClientSocket);
