@@ -105,7 +105,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Send an initial buffer
     char sendbuf[DEFAULT_BUFLEN];
     int buflen = DEFAULT_BUFLEN;
 
@@ -119,6 +118,8 @@ int main(int argc, char **argv) {
         WSACleanup();
         return 1;
     }
+
+    printf("type '/exit' to leave\ntype '/tell <id> <msg>' to whisper\n\n");
 
     do {
         strcpy(sendbuf, "");
@@ -143,11 +144,6 @@ int main(int argc, char **argv) {
         WSACleanup();
         return 1;
     }
-
-
-
-
-
 
     // cleanup
     closesocket(ConnectSocket);
